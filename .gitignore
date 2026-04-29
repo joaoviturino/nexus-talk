@@ -1,0 +1,16 @@
+node_modules/
+client/node_modules/
+
+client/dist/
+dist/
+
+QR/
+data/*.db
+
+assets/uploads/*
+!assets/uploads/.gitkeep
+
+.env
+.env.*
+
+*.log
