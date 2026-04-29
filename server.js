@@ -4,7 +4,8 @@ const fs = require('fs')
 const multer = require('multer')
 const sqlite3 = require('sqlite3').verbose()
 const XLSX = require('xlsx')
-const { getSock } = require('./wa')
+const QRCode = require('qrcode')
+const { getSock, getConnectionState, getLastQr, getLastQrAt } = require('./wa')
 const { executeFlow } = require('./flowRuntime')
 const { listChats, listMessages, getMessage, saveMessage, saveChat } = require('./chatStore')
 const { addClient, send: sseSend } = require('./sse')
@@ -69,6 +70,29 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
     filename: req.file.filename,
     path: `/assets/uploads/${req.file.filename}`
   })
+})
+
+app.get('/api/wa/status', (req, res) => {
+  const sock = getSock()
+  res.setHeader('Cache-Control', 'no-store')
+  res.json({
+    ok: true,
+    connected: !!sock,
+    connection: getConnectionState(),
+    lastQrAt: getLastQrAt() || 0
+  })
+})
+
+app.get('/api/wa/qr', async (req, res) => {
+  try {
+    const qr = getLastQr()
+    if (!qr) return res.status(404).json({ ok: false, error: 'QR indisponível' })
+    const dataUrl = await QRCode.toDataURL(qr, { margin: 1, width: 320 })
+    res.setHeader('Cache-Control', 'no-store')
+    res.json({ ok: true, qr, dataUrl, ts: getLastQrAt() || Date.now() })
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message || String(e) })
+  }
 })
 
 app.get('/api/chat/chats', async (_, res) => {

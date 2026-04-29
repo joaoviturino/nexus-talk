@@ -1,7 +1,7 @@
 const { makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion, Browsers, downloadContentFromMessage, makeCacheableSignalKeyStore } = require('@itsukichan/baileys');
 const pino = require('pino');
 const qrcode = require('qrcode-terminal');
-const { setSock } = require('./wa');
+const { setSock, setConnectionState, setLastQr, clearLastQr } = require('./wa');
 const { continueFromQuickReply } = require('./flowRuntime');
 const { saveChat, saveMessage, updateMessageMedia, getMessageByKey } = require('./chatStore');
 const { send: sseSend } = require('./sse');
@@ -32,6 +32,7 @@ let reconnectAttempts = 0;
 let qrShown = false;
 
 async function startBot() {
+    setConnectionState('starting');
     const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
     qrShown = false;
     const { version } = await fetchLatestBaileysVersion().catch(() => ({ version: undefined }));
@@ -76,6 +77,10 @@ async function startBot() {
 
         if (qr) {
             qrShown = true;
+            setLastQr(qr);
+            setConnectionState('qr');
+            sseSend('wa.qr', { qr, ts: Date.now() });
+            sseSend('wa.status', { connection: 'qr' });
             console.log('🔳 QR gerado. Escaneie com o WhatsApp.');
             qrcode.generate(qr, { small: true });
         }
@@ -83,6 +88,8 @@ async function startBot() {
         if (connection === 'close') {
             const statusCode = lastDisconnect?.error?.output?.statusCode;
             const message = lastDisconnect?.error?.message || String(lastDisconnect?.error || '');
+            setConnectionState('close');
+            sseSend('wa.status', { connection: 'close', statusCode: statusCode ?? null, message: message || '' });
             if (message) {
                 console.log(`⚠️ Desconectado: ${statusCode ?? 'desconhecido'} ${message}`);
             }
@@ -131,6 +138,9 @@ async function startBot() {
 
         if (connection === 'open') {
             reconnectAttempts = 0;
+            clearLastQr();
+            setConnectionState('open');
+            sseSend('wa.status', { connection: 'open' });
             console.log('✅ Bot conectado com sucesso!');
         }
     });
