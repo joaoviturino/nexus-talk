@@ -1,3 +1,6 @@
+require('./API/index')
+
+if (false) {
 const { makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion, Browsers, downloadContentFromMessage, makeCacheableSignalKeyStore } = require('@itsukichan/baileys');
 const pino = require('pino');
 const qrcode = require('qrcode-terminal');
@@ -323,4 +326,5 @@ try {
     require('./server')
 } catch (e) {
     console.error('FATAL: Failed to start server.js:', e)
+}
 }

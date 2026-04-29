@@ -1,3 +1,10 @@
+const { startServer, createApp } = require('./API/server')
+
+module.exports = { startServer, createApp }
+
+if (require.main === module) startServer()
+
+if (false) {
 const express = require('express')
 const path = require('path')
 const fs = require('fs')
@@ -745,3 +752,4 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server rodando em http://localhost:${PORT}/`)
 })
+}

@@ -18,7 +18,7 @@
     "vite": "^5.2.0"
   },
   "scripts": {
-    "start": "node index.js",
+    "start": "node API/index.js",
     "client:dev": "vite --config client/vite.config.js",
     "client:build": "vite build --config client/vite.config.js",
     "build": "vite build --config client/vite.config.js"
